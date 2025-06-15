@@ -18,8 +18,29 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential grub-pc-bin xorriso nasm mtools
 
-      - name: Clean before build
-        run: make clean || true
+      - name: Install i686-elf-gcc
+        run: |
+          sudo apt install -y gcc binutils
+          mkdir -p $HOME/opt/cross
+          cd $HOME
+          curl -LO https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.gz
+          curl -LO https://ftp.gnu.org/gnu/gcc/gcc-10.2.0/gcc-10.2.0.tar.gz
+          tar -xzf binutils-2.36.1.tar.gz
+          tar -xzf gcc-10.2.0.tar.gz
+          mkdir build-binutils build-gcc
+          
+          cd build-binutils
+          ../binutils-2.36.1/configure --target=i686-elf --prefix=$HOME/opt/cross --with-sysroot --disable-nls --disable-werror
+          make -j$(nproc)
+          make install
+
+          cd ../build-gcc
+          ../gcc-10.2.0/configure --target=i686-elf --prefix=$HOME/opt/cross --disable-nls --enable-languages=c --without-headers
+          make all-gcc -j$(nproc)
+          make install-gcc
+
+      - name: Add cross compiler to PATH
+        run: echo "$HOME/opt/cross/bin" >> $GITHUB_PATH
 
       - name: Build ISO
         run: make iso
