@@ -1,18 +1,25 @@
-ISO_NAME = myos.iso
-KERNEL_BIN = kernel.bin
+CC=i686-elf-gcc
+LD=i686-elf-ld
+CFLAGS=-ffreestanding -O2 -Wall -Wextra
+LDFLAGS=-Tlink.ld
 
 all: iso
 
-kernel:
-	nasm -f elf64 src/boot.asm -o boot.o
-	gcc -ffreestanding -c src/kernel.c -o kernel.o
-	ld -Ttext 0x1000 -o $(KERNEL_BIN) boot.o kernel.o --oformat binary
+kernel.o: src/kernel.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-iso: kernel
+boot.o: src/boot.asm
+	nasm -f elf32 $< -o $@
+
+kernel.bin: boot.o kernel.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+iso: kernel.bin
 	mkdir -p iso/boot/grub
-	cp $(KERNEL_BIN) iso/boot/kernel.bin
-	cp boot/grub/grub.cfg iso/boot/grub/
-	grub-mkrescue -o $(ISO_NAME) iso
+	cp kernel.bin iso/boot/kernel.bin
+	cp boot/grub/grub.cfg iso/boot/grub
+	grub-mkrescue -o myos.iso iso
 
 clean:
-	rm -rf *.o *.iso $(KERNEL_BIN) iso
+	rm -f *.o *.bin *.iso
+	rm -rf iso

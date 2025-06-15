@@ -1,9 +1,7 @@
-// src/kernel.c
 void kernel_main() {
     const char* str = "Hello from kernel!";
-    char* video = (char*)0xb8000;
-
-    for (int i = 0; str[i] != '\0'; i++) {
+    char* video = (char*) 0xb8000;
+    for (int i = 0; str[i]; i++) {
         video[i * 2] = str[i];
         video[i * 2 + 1] = 0x07;
     }
