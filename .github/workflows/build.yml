@@ -1,4 +1,4 @@
-name: Build My OS
+name: Build Bootloader OS
 
 on:
   push:
@@ -13,40 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential grub-pc-bin xorriso nasm mtools
+      - name: Install NASM
+        run: sudo apt update && sudo apt install -y nasm
 
-      - name: Install i686-elf-gcc
-        run: |
-          sudo apt install -y gcc binutils
-          mkdir -p $HOME/opt/cross
-          cd $HOME
-          curl -LO https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.gz
-          curl -LO https://ftp.gnu.org/gnu/gcc/gcc-10.2.0/gcc-10.2.0.tar.gz
-          tar -xzf binutils-2.36.1.tar.gz
-          tar -xzf gcc-10.2.0.tar.gz
-          mkdir build-binutils build-gcc
-          
-          cd build-binutils
-          ../binutils-2.36.1/configure --target=i686-elf --prefix=$HOME/opt/cross --with-sysroot --disable-nls --disable-werror
-          make -j$(nproc)
-          make install
+      - name: Build boot.img
+        run: make
 
-          cd ../build-gcc
-          ../gcc-10.2.0/configure --target=i686-elf --prefix=$HOME/opt/cross --disable-nls --enable-languages=c --without-headers
-          make all-gcc -j$(nproc)
-          make install-gcc
-
-      - name: Add cross compiler to PATH
-        run: echo "$HOME/opt/cross/bin" >> $GITHUB_PATH
-
-      - name: Build ISO
-        run: make iso
-
-      - name: Upload ISO artifact
+      - name: Upload boot image
         uses: actions/upload-artifact@v4
         with:
-          name: myos
-          path: myos.iso
+          name: boot-img
+          path: boot.img
