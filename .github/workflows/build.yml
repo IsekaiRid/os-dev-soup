@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential grub-pc-bin xorriso nasm
+          sudo apt install -y build-essential grub-pc-bin xorriso nasm mtools
 
       - name: Build ISO
         run: make iso
